@@ -1,0 +1,72 @@
+ST_CNTY_FIPS_CD	   county_coefficient	VAR3	CAL_YR_MTH	ST_FIPS_CD	CNTY_FIPS_CD	CNTY_NAME	STATE_CD	
+DMA_CD	DMA_MKT_NAME	TTL_ELIGIBLE	PCT_OF_DMA	TTL_CNTY_MA_MAPD	HUM_CNTY_MA_MAPD
+	
+local_tv_spend	  national_tv_brand_spend	  national_tv_product_spend	  drtv_longform_spend	  drtv_shortform_spend	
+digital_sem_spend	dm_spend	local_print_spend	outdoor_ooh_spend	radio_spend
+digital_sem_spend_1	digital_sem_spend_2	dm_spend_1	dm_spend_2	drtv_longform_spend_1	drtv_longform_spend_2	
+drtv_shortform_spend_1	drtv_shortform_spend_2	local_print_spend_1	local_print_spend_2	
+local_tv_spend_1	local_tv_spend_2	national_tv_brand_spend_1	national_tv_brand_spend_2	
+national_tv_product_spend_1	national_tv_product_spend_2	outdoor_ooh_spend_1	outdoor_ooh_spend_2	radio_spend_1	radio_spend_2	
+
+humana_enrolled		humana_count_hmo_plans	  humana_count_ppo_plans   humana_ratio_hmo_plans	    humana_ratio_ppo_plans   
+humana_share_hmo_plans	  humana_share_ppo_plans    humana_vs_competitor_pi	pi_humana
+avg_competitor_enrolled	 avg_num_competitor_hmo_plans	avg_num_competitor_ppo_plans	tot_competitor_enrolled	     tot_num_competitor_hmo_plans	
+tot_num_competitor_ppo_plans	pi_competitors	  competitor_ratio_hmo_plans	competitor_ratio_ppo_plans	
+
+quadrant    ma_penetration	zillow_housing_value	monthly_coeff
+
+LIBNAME Case4 'C:\Users\yxw166230\MKT6v99\case4'; run;
+
+/***** output from sas7bdat to Excel  *****/
+ODS HTML FILE='c:\Users\yxw166230\MKT6v99\case4\case4.xls';
+PROC print data=Case4.case4;
+run;
+/********my model -- Panel Regression *********/
+proc panel data= Case4.case4 outest = case4lst1;
+	id ST_CNTY_FIPS_CD  CAL_YR_MTH ;
+    model HUM_CNTY_MA_MAPD = humana_enrolled  tot_competitor_enrolled  zillow_housing_value  humana_count_ppo_plans      
+local_tv_spend	  national_tv_brand_spend	   drtv_longform_spend	  	
+digital_sem_spend	dm_spend	local_print_spend	outdoor_ooh_spend	radio_spend
+digital_sem_spend_1		dm_spend_1		drtv_longform_spend_1	local_print_spend_2	
+local_tv_spend_2		national_tv_brand_spend_2	radio_spend_1	radio_spend_2	
+ /fixtwo printfixed; 
+    output out = case4out1 p = pred r = residual;
+run;
+/******** calculate means for elasticity  *********/
+proc means data= Case4.case4;
+var  humana_enrolled  tot_competitor_enrolled  zillow_housing_value  humana_count_ppo_plans      
+local_tv_spend	  national_tv_brand_spend	   drtv_longform_spend	  	
+digital_sem_spend	dm_spend	local_print_spend	outdoor_ooh_spend	radio_spend
+digital_sem_spend_1		dm_spend_1		drtv_longform_spend_1	local_print_spend_2	
+local_tv_spend_2		national_tv_brand_spend_2	radio_spend_1	radio_spend_2	;
+run;
+
+proc means data = Case4.case4 ;
+var HUM_CNTY_MA_MAPD;
+run;
+/******** output case4out1, case4lst1  to Excel  *********/
+ODS HTML File = 'C:\Users\yxw166230\MKT6v99\case4\case4out1.xls';
+proc print data = case4out1;
+run;
+
+ODS HTML File = 'C:\Users\yxw166230\MKT6v99\case4\case4lst1.xls';
+proc print data = case4lst1;
+run;
+
+/******* Mike code ***********/
+proc panel data= panel.paneldata2 outest = panelest;
+	id STORE QRTR;
+    model REVENUE = __DM __EM __SMS /fixtwo printfixed; 
+    output out = panelout2 p = pred r = residual;
+run;
+
+* if F Test for No Fixed Effects < 0.05 then no fixed effects ;
+
+proc panel data= panel.paneldata2 outest = panelest;
+	id STORE QRTR;
+    model REVENUE = __DM __EM __SMS /rantwo ; 
+    output out = panelout2 p = pred r = residual;
+run;
+
+* if Hausman Test for Random Effects < 0.05 then no fixed effect ;
+
