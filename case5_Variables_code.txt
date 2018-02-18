@@ -1,0 +1,177 @@
+NUM_DAYS    CUST_ID   Num_Adults_in_LU  BRAND_TENURE  NUM_BUS_RNTLS	NUM_LEI_RNTLS  AVG_RENTAL_GAP_MTHS    
+management_occ	 technical_occ	professinal_occ	sales_occ   officeadmin_occ	bluecollar_occ	farmer_occ	other_occ	
+retired_occ	household_income    probabilty_children	  male	AGE	EDUC_YEARS	MARRIED   
+Political_Contributor	Religious_Contributor	MOR_BANK__ODDS_AND_ENDS	MOR_BANK__PHOTOGRAPHY	Opportunity_seeker	
+DWELLING_TYPE		Religious_Magazine	Upscale_Merch_Buyer	General_Contributor	
+General_Merch_buyer	Gifts_and_Gadgets_Buyer	Gardening_Buyer	Gardening_Magazinr	Sports_Magazine_Male	
+MOR_BANK__MISCELLANEOUS	News_and_finance	fitness_magazine	Health_Contributor	
+Male_Merch_Buyer	Female_Orient_Magazine	Culinary_Magazine	D_I_Yers	Crafts_Hobby_Buyer	Female_Merch_buyer 
+Special_Foods_Buyer	Family_Magazine	 MOR_BANK__BOOK_BUYER	LENGTH_OF_RESIDENCE		PLAT_CUST	CONTACTABLE	
+UMBRELLA_ACCT	DAYS_SINCE_LAST_RENTAL		NUM_RNTLS	GROSS		NUM_1D_RNTLS	NUM_2D_RNTLS	
+NUM_3D_RNTLS	NUM_4D_RNTLS	NUM_5D_RNTLS	NUM_GT_5D_RNTLS	NUM_AP_RNTLS	NUM_OAP_RNTLS		
+DirectRentals	InDirectRentals	NUM_CHNL_HERTZDOTCOM_RNTLS	NUM_CHNL_800_NUM_RNTLS	NUM_CHNL_WALK_UP_RNTLS	
+NUM_CHNL_LOCAL_RNTLS	NUM_CHNL_INSUR_CO_RNTLS	CorpRntls	CommRntls	ApRntls	GprPtRntl	OthrRwdRntl	
+NoRwdRntl	Rntr_6mo	Rntr_9mo	Rntr_12mo	Rntr_15mo	Rntr_18mo	Rntr_24mo	Rntr_36mo	
+Rntr_48mo	max_gap	min_gap		TOTAL_NET_SENT  TOTAL_OPENS	TOTAL_CLICKS	TOTAL_UNSUBS	
+ENEWS_NET_SENT	ENEWS_OPENS	ENEWS_CLICKS	ENEWS_UNSUBS	SOLO_NET_SENT	SOLO_OPENS	SOLO_CLICKS	SOLO_UNSUBS	
+LIFECYCLE_NET_SENT	LIFECYCLE_OPENS	LIFECYCLE_CLICKS	LIFECYCLE_UNSUBS	STIMULATION_NET_SENT	STIMULATION_OPENS
+ STIMULATION_CLICKS	STIMULATION_UNSUBS	ATTRITION_NET_SENT	ATTRITION_OPENS	ATTRITION_CLICKS	ATTRITION_UNSUBS 
+REACTIVATION_NET_SENT	REACTIVATION_OPENS	REACTIVATION_CLICKS	REACTIVATION_UNSUBS	ACQUISITION_NET_SENT	
+ACQUISITION_OPENS	ACQUISITION_CLICKS	ACQUISITION_UNSUBS	RG_tier	FG_tier	PC_tier	
+/************************************************************************************************/
+LIBNAME Case5 'C:\Users\yxw166230\MKT6v99\case5'; run;
+/***** output from sas7bdat to Excel  *****/
+ODS HTML FILE='c:\Users\yxw166230\MKT6v99\case5\case5.xls';
+PROC print data=Case5.case5;
+run;
+/********my model -- Poisson CountReg *********/
+   proc countreg data = Case5.case5;
+       model  NUM_DAYS = Num_Adults_in_LU  BRAND_TENURE  NUM_BUS_RNTLS	NUM_LEI_RNTLS  AVG_RENTAL_GAP_MTHS   
+TOTAL_NET_SENT  management_occ	 professinal_occ	sales_occ   officeadmin_occ	bluecollar_occ	farmer_occ	
+retired_occ	    probabilty_children	  AGE	EDUC_YEARS	MARRIED   / dist=poisson;
+output out = case5Poisson (keep = cust_id  predicted_poisson  NUM_DAYS) 
+pred = predicted_poisson;
+    run;
+/******************* CountReg / Negative Binomial ********************************/
+  proc countreg data = Case5.case5 ;
+model NUM_DAYS  =    BRAND_TENURE  NUM_BUS_RNTLS	NUM_LEI_RNTLS  AVG_RENTAL_GAP_MTHS   
+TOTAL_NET_SENT  management_occ	 professinal_occ	sales_occ   officeadmin_occ	bluecollar_occ		
+ EDUC_YEARS	MARRIED  / dist=negbin(p=2);
+output out = case5NegBin (keep = cust_id predicted_negbin NUM_DAYS) 
+pred = predicted_negbin;
+    run;
+/*************************** CountReg / ZIP ************************/
+ proc countreg data = Case5.case5;
+       model  NUM_DAYS  = Num_Adults_in_LU  BRAND_TENURE  NUM_BUS_RNTLS	NUM_LEI_RNTLS  AVG_RENTAL_GAP_MTHS   
+TOTAL_NET_SENT  management_occ	 professinal_occ	sales_occ   officeadmin_occ	bluecollar_occ	farmer_occ	
+retired_occ	    probabilty_children	  AGE	EDUC_YEARS	MARRIED 
+/ dist=zip;
+	   zeromodel NUM_DAYS ~ Num_Adults_in_LU  BRAND_TENURE  NUM_BUS_RNTLS	NUM_LEI_RNTLS  AVG_RENTAL_GAP_MTHS   
+TOTAL_NET_SENT  management_occ	 professinal_occ	sales_occ   officeadmin_occ	bluecollar_occ	farmer_occ	
+retired_occ	    probabilty_children	  AGE	EDUC_YEARS	MARRIED ;
+	   output out = case5zip (keep =  cust_id  NUM_DAYS  predzip) 
+pred = predzip;
+    run;
+/************************** Sort & Merge  *********************/
+proc sort data= case5Poisson ;
+by cust_id;
+run;
+proc sort data= case5NegBin;
+by cust_id;
+run;
+proc sort data= case5zip;
+by cust_id;
+run;
+	
+data mergecase5;
+merge case5Poisson   case5NegBin   case5zip;
+by cust_id;
+run;
+/******** output to Excel  *********/
+ODS HTML File = 'C:\Users\yxw166230\MKT6v99\case4\case5PoissonMerge.xlsx';
+proc print data = mergecase5;
+run;
+
+/********* Import from Hertz which contains clus# from LatentGold for Segmentation **********/
+proc import datafile='c:\users\yxw166230\mkt6v99\case5\Hertz.xls'
+out=Case5.Hertz dbms=Excel replace;
+getnames=yes;
+run;
+/******************** Poisson NegBin by Cluster ********************/
+proc sort data = case5.Hertz;
+by clus;
+run;
+/****** Target at Clus1  ************/
+proc countreg data = Case5.Hertz ;
+model NUM_DAYS  =    BRAND_TENURE  NUM_BUS_RNTLS	NUM_LEI_RNTLS  AVG_RENTAL_GAP_MTHS   
+TOTAL_NET_SENT  management_occ	 professinal_occ	sales_occ   officeadmin_occ	bluecollar_occ		
+ EDUC_YEARS	MARRIED  / dist=negbin(p=2);
+output out = HertzNegBin_1 (keep = cust_id predicted_negbin NUM_DAYS) 
+pred = predicted_negbin;
+where clus=1;
+run;
+/******* Target at Clus2  **********/
+proc countreg data = Case5.Hertz ;
+model NUM_DAYS  =    BRAND_TENURE  NUM_BUS_RNTLS	NUM_LEI_RNTLS  AVG_RENTAL_GAP_MTHS   
+TOTAL_NET_SENT  management_occ	 professinal_occ	sales_occ   officeadmin_occ	bluecollar_occ		
+ EDUC_YEARS	MARRIED  / dist=negbin(p=2);
+output out = HertzNegBin_2 (keep = cust_id predicted_negbin NUM_DAYS) 
+pred = predicted_negbin;
+where clus=2;
+run;
+/*** Target at Clus3*****/ 
+  proc countreg data = Case5.Hertz ;
+model NUM_DAYS  =    BRAND_TENURE  NUM_BUS_RNTLS	NUM_LEI_RNTLS  AVG_RENTAL_GAP_MTHS   
+   / dist=negbin(p=2);
+output out = HertzNegBin_3 (keep = cust_id predicted_negbin NUM_DAYS) 
+pred = predicted_negbin;
+where clus=3;
+    run;
+/***** Target at Clus4 ******/
+  proc countreg data = Case5.Hertz ;
+model NUM_DAYS  =    BRAND_TENURE  NUM_BUS_RNTLS	NUM_LEI_RNTLS     
+ management_occ	 	sales_occ   	bluecollar_occ		
+ EDUC_YEARS	  / dist=negbin(p=2);
+output out = HertzNegBin_4 (keep = cust_id predicted_negbin NUM_DAYS) 
+pred = predicted_negbin;
+where clus=4;
+    run;
+/***** Target at Clus5 ******/
+  proc countreg data = Case5.Hertz ;
+model NUM_DAYS  =      NUM_BUS_RNTLS	NUM_LEI_RNTLS  / dist=negbin(p=2);
+output out = HertzNegBin_5 (keep = cust_id predicted_negbin NUM_DAYS) 
+pred = predicted_negbin;
+where clus=5;
+    run;
+/*************** compute Elasticity, first compute price mean and qty (NUM_DAYS) mean ****************/
+data Hertz;
+set Hertz;
+price = GROSS / NUM_DAYS;
+run;
+proc means data=Hertz;
+var  NUM_DAYS price;
+by clus;
+run;
+/********************************** Output the 5 predicted Poisson files from sas to Excel  **************************************/
+ODS HTML File = 'C:\Users\yxw166230\MKT6v99\case5\HertzNegBin_5.xls';
+proc print data = HertzNegBin_5;
+run;
+
+
+/******************************************** Mike code *********************************************/
+
+   proc countreg data = Case5.avoidsample;
+       model  SecondHalf2016_Rentals = Q2CY_Solo BRental_YoYDiff
+/ dist=poisson;
+	   output out = ppredpoisson (keep = cust_id predicted_poisson SecondHalf2016_Rentals) 
+pred = predicted_poisson;
+    run;
+
+  proc countreg data = Case5.avoidsample;
+       model  SecondHalf2016_Rentals = Q2CY_Solo BRental_YoYDiff
+/ dist=negbin(p=2);
+	   output out = pprednegbin (keep = cust_id predicted_negbin SecondHalf2016_Rentals) 
+pred = predicted_negbin;
+    run;
+
+ proc countreg data = Case5.avoidsample;
+       model  SecondHalf2016_Rentals = Q2CY_Solo BRental_YoYDiff
+/ dist=zip;
+	   zeromodel SecondHalf2016_Rentals ~ Q2CY_Solo BRental_YoYDiff;
+	   output out = ppredzip (keep =  cust_id predicted_zip SecondHalf2016_Rentals) 
+pred = predicted_zip;
+    run;
+
+proc sort data = ppredpoisson; by cust_id; run;
+proc sort data = ppredzip; by cust_id; run;
+proc sort data = pprednegbin; by cust_id; run;
+	
+data mergex;
+merge 
+ppredpoisson 
+ppredzip 
+pprednegbin
+; 
+by cust_id; 
+run;
+
