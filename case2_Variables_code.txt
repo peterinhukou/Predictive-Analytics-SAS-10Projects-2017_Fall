@@ -1,0 +1,168 @@
+Obs	CustomerId	sms_cnt	email_cnt	mail_cnt	allcom_cnt
+sew_qty	paper_qty pct_qty needle_qty  quilt_qty impulse_qty  other_qty kids_qty	jewelry_qty ribbon_qty	paint_qty
+seasfloral_qty	celeb_qty fabric_qty  fleece_qty warm_qty homedec_qty public_qty  special_qty foam_qty	bccomp_qty
+sew_ns	paper_ns  pct_ns  needle_ns   quilt_ns 	impulse_ns   other_ns  kids_ns	jewelry_ns  ribbon_ns   paint_ns
+seasfloral_ns	celeb_ns  fabric_ns   fleece_ns	 warm_ns  homedec_ns  public_ns	  special_ns  foam_ns  bccomp_ns
+sew_ns_qty	paper_ns_qty	pct_ns_qty	needle_ns_qty	quilt_ns_qty	impulse_ns_qty	other_ns_qty	kids_ns_qty	jewelry_ns_qty
+ribbon_ns_qty	paint_ns_qty	seasfloral_ns_qty	celeb_ns_qty	fabric_ns_qty	fleece_ns_qty	special_ns_qty	warm_ns_qty	homedec_ns_qty
+public_ns_qty	foam_ns_qty	bccomp_ns_qty
+
+LIBNAME Case2 'C:\Users\yxw166230\MKT6v99\0915'; 
+run;
+proc import datafile='c:\users\yxw166230\mkt6v99\case2\fabric.csv'
+out=fabric dbms=csv replace;
+getnames=yes;
+run;
+proc sort data=fabric;
+by clu;
+run;
+ODS HTML FILE='c:\users\yxw166230\MKT6v99\0915\case2.xls';
+PROC Print data=fabric;
+run;
+
+data fabric;
+set fabric ;
+total_ns = sew_ns+	paper_ns + pct_ns + needle_ns +  quilt_ns +	impulse_ns +  other_ns + kids_ns+	jewelry_ns+  ribbon_ns  + paint_ns
++seasfloral_ns+	celeb_ns + fabric_ns +  fleece_ns	+ warm_ns + homedec_ns + public_ns+	  special_ns + foam_ns + bccomp_ns;
+run;
+data fabric;
+set fabric ;
+total_qty = sew_qty+paper_qty +pct_qty+ needle_qty + quilt_qty+ impulse_qty + other_qty+ kids_qty+	jewelry_qty+ ribbon_qty+paint_qty
++seasfloral_qty+celeb_qty +fabric_qty + fleece_qty +warm_qty +homedec_qty +public_qty + special_qty+ foam_qty+	bccomp_qty;
+run;
+data fabric;
+set fabric ;
+if total_qty NE 0 then price = total_ns/total_qty;
+run;
+
+proc reg data=Fabric;
+model total_qty = price  sms_cnt email_cnt mail_cnt/vif collin;
+/* output out = resid p = PUNITS r = RUNITS student = student; */
+/* where total_qty NE 0; */
+by clu;  
+run;
+/* calculate total elasticity */
+proc reg data=fabric;
+model total_qty = price  sms_cnt email_cnt mail_cnt/vif collin;
+run;
+
+proc freq data=fabric;
+table clu;
+run;
+
+proc means data=fabric;	
+var sew_qty	paper_qty pct_qty needle_qty  quilt_qty impulse_qty  other_qty kids_qty	jewelry_qty ribbon_qty	paint_qty
+seasfloral_qty	celeb_qty fabric_qty  fleece_qty warm_qty homedec_qty public_qty  special_qty foam_qty	bccomp_qty  ;	
+by clu;	
+run;
+
+proc means data=  fabric;
+var sew_ns	paper_ns  pct_ns  needle_ns   quilt_ns 	impulse_ns   other_ns  kids_ns	jewelry_ns  ribbon_ns   paint_ns
+seasfloral_ns	celeb_ns  fabric_ns   fleece_ns	 warm_ns  homedec_ns  public_ns	  special_ns  foam_ns  bccomp_ns;
+run;
+
+proc means data=  fabric;
+var sew_ns	paper_ns  pct_ns  needle_ns   quilt_ns 	impulse_ns   other_ns  kids_ns	jewelry_ns  ribbon_ns   paint_ns
+seasfloral_ns	celeb_ns  fabric_ns   fleece_ns	 warm_ns  homedec_ns  public_ns	  special_ns  foam_ns  bccomp_ns;
+by clu;
+run;
+/* reg per product, price coefficient of each product*/
+proc reg data=fabric;
+model paper_qty = paper_ns_qty sms_cnt email_cnt mail_cnt /vif collin;
+where paper_qty>0;
+run;
+proc means data=  fabric;
+var  bccomp_ns  bccomp_qty;
+where  bccomp_qty>0;
+run;
+/*********clu1 strategy: elasticity, product=other & sew ************/
+proc reg data=Fabric;
+model other_qty =  other_ns_qty  sms_cnt email_cnt mail_cnt/vif collin;
+where clu=1 and other_qty > 0;  
+run;
+proc means data=  fabric;
+var other_qty other_ns other_ns_qty;
+where clu=1 and other_qty>0;
+run;
+proc univariate data=  fabric;
+var sms_cnt;
+where clu=1 and other_qty>0;
+run;
+/*********** clu2 strategy **************/
+proc reg data=Fabric;
+model paper_qty =  paper_ns_qty  mail_cnt /vif collin;
+where clu=2 and paper_qty>0;  
+run;
+proc means data=  fabric;
+var paper_qty paper_ns paper_ns_qty;
+where clu=2 and paper_qty>0;
+run;
+proc univariate data=  fabric;
+var mail_cnt;
+where clu=2 and paper_qty>0;
+run;
+/*********** clu3 strategy **************/
+proc reg data=Fabric;
+model needle_qty =  needle_ns_qty   email_cnt mail_cnt /vif collin;
+where clu=3 and needle_qty>0;  
+run;
+proc means data=  fabric;
+var needle_qty needle_ns needle_ns_qty;
+where clu=3 and needle_qty>0;
+run;
+proc univariate data=  fabric;
+var email_cnt mail_cnt;
+where clu=3 and needle_qty>0;
+run;
+/*********** clu4 strategy **************/
+proc reg data=Fabric;
+model homedec_qty =  homedec_ns_qty sms_cnt  /vif collin;
+where clu=4 and homedec_qty;  
+run;
+proc means data=  fabric;
+var homedec_qty homedec_ns homedec_ns_qty;
+where clu=4 and homedec_qty;  
+run;
+proc univariate data=  fabric;
+var sms_cnt;
+where clu=4 and homedec_qty;  
+run;
+/*********** clu5 strategy **************/
+proc reg data=Fabric;
+model other_qty = other_ns_qty  mail_cnt  /vif collin;
+where clu=5 and other_qty>0;  
+run;
+proc means data=  fabric;
+var other_qty other_ns other_ns_qty;
+where clu=5 and other_qty>0;  
+run;
+proc univariate data=  fabric;
+var mail_cnt;
+where clu=5 and other_qty>0;  
+run;
+/*********** clu6 strategy **************/
+proc reg data=Fabric;
+model sew_qty = sew_ns_qty  mail_cnt /vif collin;
+where clu=6 and sew_qty>0;  
+run;
+proc means data=  fabric;
+var sew_qty sew_ns sew_ns_qty;
+where clu=6 and sew_qty>0;   
+run;
+proc univariate data=  fabric;
+var mail_cnt;
+where clu=6 and sew_qty>0;  
+run;
+/*********** clu7 strategy **************/
+proc reg data=Fabric;
+model quilt_qty = quilt_ns_qty mail_cnt  /vif collin;
+where clu=7 and quilt_qty>0;  
+run;
+proc means data=  fabric;
+var quilt_qty quilt_ns quilt_ns_qty;
+where clu=7 and quilt_qty>0;   
+run;
+proc univariate data=  fabric;
+var mail_cnt;
+where clu=7 and quilt_qty>0;  
+run;

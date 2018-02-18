@@ -1,0 +1,45 @@
+
+yrwk	qty	ns    net_price     sms_cnt	email_cnt	dm_cnt	disc_perc 	adv_NPI 	adv_SPC	 unadv	ThreeDaySale	July4Sale	
+ColumbusDay	Coupon_Commotion	Daffodil_Dash	Firefly_Frenzy	Friday_Doorbusters	Friends_Family	Home_Sale	Labor_Day	Memorial_Day	
+Merry_Moolah	Moonlight_Madness	PreEaster	PresidentsDay	Saturday_Doorbusters	Super_Savings	Super_Weekend	VeteransDay    Winter_Warmup
+ q1	q2	q3	q4	
+
+
+LIBNAME Case3 'C:\Users\yxw166230\MKT6v99\case3'; run;
+
+/***** output from sas7bdat to Excel  *****/
+ODS HTML FILE='c:\Users\yxw166230\MKT6v99\case3\marcom.xls';
+PROC print data=Case3.case3;
+run;
+
+/***** import from CSV to sas7bdat in Work. library  *****/
+proc import datafile='c:\users\yxw166230\mkt6v99\case2\fabric.csv'
+out=fabric dbms=csv replace;
+getnames=yes;
+run;
+
+/******* Mike code ***********/
+proc reg data = XXX;
+model NS = 
+dm_cnt sms_cnt email_cnt
+adv_NPI	adv_SPC	unadv
+q2 q3 q4
+ColumbusDay Memorial_Day Super_Savings Super_Weekend;
+run; quit;
+
+
+
+proc pdlreg data = XXX;
+model qty =
+net_price 
+dm_cnt (4,4)  sms_cnt (3,3) adv_npi (5,5)  adv_spc (5,5)  unadv (4,4)
+ColumbusDay   Memorial_Day  Super_Savings  Super_Weekend
+q2 q3 q4 /dwprob;
+run;
+
+
+Data = xxx;
+Set = yyy;
+RADIO_LAG1 = LAG(RADIO); RADIO_LAG2 = LAG2(RADIO);RADIO_LAG3 = LAG3(RADIO);
+Run;
+
