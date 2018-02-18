@@ -1,0 +1,125 @@
+hours_open      MEDIAN_HH_INCOME   MEDIAN_HH_NETWORTH     PERC_UNEMPLOYED  	AGGR_HH_NETWORTH	   age_HH_NETWORTH	 num_competition   
+Bedroom_community	Military_community	Retirement_community	 Rural_area	Urban_area	  median_age	  avg_age       region	
+
+num_clients_2013	num_clients_2014	num_new_clients_2013	num_new_clients_2014	num_patients_2013	num_patients_2014    
+num_new_patients_2013	num_new_patients_2014	num_visits_2013	num_visits_2014	    rev_2013	  rev_2014	first_rev_2013	   first_rev_2014	
+discounts_2013		first_visit_discounts_2013	first_visit_discounts_2014	units_2013	units_2014	first_visit_units_2013	
+first_visit_units_2014   discounts_2014   throughput_2013	    throughput_2014	repeat_units_2013    repeat_units_2014	avg_price_new_2013
+avg_price_new_2014	avg_price_repeat_2013	   avg_price_repeat_2014	   repeat_revenue_2013	repeat_revenue_2014	repeat_discount_2013	
+repeat_discount_2014	perc_disc_ofrev_2013	perc_disc_ofrev_2014	perc_first_disc_ofrev_2013	perc_first_disc_ofrev_2014	
+perc_repeat_disc_ofrev_2013	perc_repeat_disc_ofrev_2014	perc_marketspend_ofrev_2013	perc_marketspend_ofrev_2014         mrktspend_visits 
+
+pet_expend_per_pet_own	  perc_married_hh   pet_expend_per_hh	 perc_home_ownership    perc_hh_with_pet	 perc_hh_with_one_pet	perc_hh_with_2plus_pet	 
+perc_hh_retired	  economic_challenges	total_population	   total_hh    urban_hh	suburban_hh	second_city_hh	  town_rural_hh	perc_urban_hh	
+perc_suburban_hh	    perc_second_city_hh	       perc_town_rural_hh	pet_expenditures_2014	perc_hh_with_kids	
+
+AU	ZIPCODE	      CMT_conversion	CMT_expired_leads	CMT_closed_leads	CMT_expired_leads_num	   CMT_visits	   
+AHHA_accredited_flag	 shelter_partner_flag          
+Service_Radius	own_vacation_home_yes	own_vacation_home_no	own_timeshare_yes	own_timeshare_no       shelter_patients_permth
+Remodel_Year	  Remodel_amt          remodel_2013	  remodel_2014	        next_appearance_excellent	      int_appearance_excellent  
+   
+Overall_sat_2013	Overall_sat_2014	likely_recommend_2013	 likely_recommend_2014	  likely_return_2013	  likely_return_2014	
+hospital_atmosphere_2013    hospital_atmosphere_2014	staff_friendly_2013	staff_friendly_2014	staff_prepared_2013	 staff_prepared_2014	
+kept_informed_2013	kept_informed_2014	vet_communicate_2013	vet_communicate_2014	caring_at_home_2013	caring_at_home_2014	
+cost_next_visit_2013	cost_next_visit_2014	pet_next_visit_2013	pet_next_visit_2014	checkout_process_2013	checkout_process_2014	
+scheduled_appt_friendly_2013	scheduled_appt_friendly_2014	easy_schedule_appt_2013	    easy_schedule_appt_2014	convenient_appt_times_2013	
+convenient_appt_times_2014    	 payment_options_2013	   payment_options_2014       perc_shelter_patients_2013        perc_shelter_patients_2014
+
+Marketing_spend_2013	Marketing_spend_2014	Valid_reminders_2014	Valid_Emails_2014     Reputation_Score_2013	 Reputation_Score_2014	
+
+skills_abilities_2012	skills_abilities_2014	personal_accomplishment_2012    personal_accomplishment_2014	
+good_place_work_2012	good_place_work_2014	considering_leaving_2012	considering_leaving_2014  help_org_succeed_2012   help_org_succeed_2014	
+safe_express_views_2012	safe_express_views_2014	respect_amongst_peers_2014	treated_fairly_2012	treated_fairly_2014	long_term_future_2012	
+long_term_future_2014	well_managed_2012	well_managed_2014	perf_appraisal_adequate_2014	defined_perf_goals_2012	defined_perf_goals_2014	
+match_pay_to_perf_2012	match_pay_to_perf_2014	quality_medicine_2012	quality_medicine_2014	client_experience_2012	client_experience_2014	
+best_for_the_pet_2012	best_for_the_pet_2014	feelings_pet_owners_2012	feelings_pet_owners_2014	paid_worth_2012	   paid_worth_2014	
+benefits_meet_needs_2012	benefits_meet_needs_2014	employee_cooperation_2012	employee_cooperation_2014	growth_development_2012	
+growth_development_2014	  access_equip_tools_2012	access_equip_tools_2014	   amt_work_reasonable_2012	amt_work_reasonable_2014	
+work_life_balance_2012	  work_life_balance_2014	
+
+vet_years_experience	tech_years_experience	staff_years_experience	  vet_top_revenue_left	  vet_pos_morale_left	
+turnover_admin	turnover_Kennel_Groomer	turnover_Manager	turnover_Tech	turnover_Vet	tenure_admin	tenure_kennel_groomer	tenure_tech	
+tenure_vet	tenure_manager		count_kennel_groomer	count_manager	count_tech	count_vet      count_admin      
+vet_to_admin	vet_to_kennel_groomer	 vet_to_manager	       vet_to_tech	perc_turnover_admin	perc_turnover_kennel_groomer	
+perc_turnover_manager	perc_turnover_tech	perc_turnover_vet
+
+lost_gain_large_employer     gain_1plus_large_employer	    lost_1plus_large_employer
+/***************************************  repeat_rev_2014 *****************************************************/
+proc syslin data = group.vca 2sls out = predicted ;
+
+endogenous   	  avg_price_new_2014    first_visit_units_2014    num_new_clients_2014    ;
+
+instruments  	num_competition   hours_open 	ext_appearance_excellent	int_appearance_excellent     AHHA_accredited_flag   
+                shelter_partner_flag  PERC_UNEMPLOYED  economic_challenges	total_population	   total_hh    
+                avg_age     MEDIAN_HH_INCOME   perc_hh_with_pet      vet_years_experience	tech_years_experience	staff_years_experience	  
+                count_kennel_groomer	count_manager	count_tech	count_vet      count_admin;
+
+repeat_rev_14        : model 	repeat_revenue_2014 =  avg_price_new_2014  first_visit_units_2014   ;
+                      output p = pred_rev_14;
+
+first_visit_units_14: model 	first_visit_units_2014 =  num_new_clients_2014    avg_price_new_2014;  
+                      p = pred_1stunit_14;
+  
+num_new_clients_14  : model 	num_new_clients_2014 =  	  Reputation_Score_2014  Overall_sat_2014  hours_open   
+                     	Marketing_spend_2014     	  	   CMT_visits  
+                     economic_challenges	     total_population	         urban_hh	    suburban_hh	
+                   second_city_hh	  town_rural_hh	     avg_age     MEDIAN_HH_INCOME    perc_hh_with_pet	 ;
+                  p = pred_newclients_14
+run;
+/*****************************************first_rev_2014*************************************************************/
+proc syslin data = group.vca3 2sls out = predicted first ;
+endogenous   	  avg_price_new_2014    first_visit_units_2014    num_new_clients_2014    ;
+instruments  	num_competition   hours_open 	ext_appearance_excellent	int_appearance_excellent     AHHA_accredited_flag   
+                shelter_partner_flag  PERC_UNEMPLOYED  economic_challenges	total_population	   total_hh    
+                avg_age     MEDIAN_HH_INCOME   perc_hh_with_pet      vet_years_experience	tech_years_experience	staff_years_experience	  
+                count_kennel_groomer	count_manager	count_tech	count_vet      count_admin;
+
+first_rev_14        : model 	first_rev_2014 =  avg_price_new_2014  first_visit_units_2014   ;
+                      output p = pred_rev_14;
+
+first_visit_units_14: model 	first_visit_units_2014 =  num_new_clients_2014    avg_price_new_2014;  
+                      p = pred_1stunit_14;
+  
+num_new_clients_14  : model 	num_new_clients_2014 =  	  Reputation_Score_2014  Overall_sat_2014  hours_open   
+                     	Marketing_spend_2014     	  	   CMT_visits  
+                     economic_challenges	     total_population	         urban_hh	    suburban_hh	
+                   second_city_hh	  town_rural_hh	     avg_age     MEDIAN_HH_INCOME    perc_hh_with_pet	 ;
+                  p = pred_newclients_14
+run;
+
+/********************************************************************************************/
+
+LIBNAME group 'C:\Users\yxw166230\MKT6v99\group'; run;
+/***** import from csv to sas7bdat *****/
+proc import datafile = 'c:\users\yxw166230\MKT6v99\group\vca.csv'
+out = group.vca DBMS = csv replace;
+getnames = YES;
+run;
+/************************************ Mike code************************/
+proc syslin data = work.new_mmm 2sls out = predicted first;
+endogenous  sales Unique_web_visitors Unaided_Awareness;
+
+instruments window TOM sales_lag1 Unique_web_visitors_lag1 Unaided_Awareness_lag1 
+            positive negative digital_SEM ;
+
+units: model sales =   
+             unique_web_visitors unaided_awareness
+             national_tv drtv_longform_lag1 drtv_shortform nationalprint_lag1nationalprint_lag3 nationalprint_lag4
+             dm_lag1 dm_lag2 sales_lag1 ;
+output p = pred_units;
+
+visits: model Unique_web_visitors = 	
+	DRTV_longform_LAG1 DRTV_longform_LAG2 DRTV_longform_LAG3 DRTV_longform_LAG4		
+	DRTV_longform_LAG5 DRTV_shortform_lag1 digital_SEM_DM digital_SEM_DRTV_long 	
+	digital_SEM_DRTV_short DIGITAL_SEM window Unique_web_visitors_lag1;
+output p = pred_webvisitors;
+
+aware:	model Unaided_Awareness =  
+	LOCAL_TV LOCAL_PRINT NATIONALTV_LAG2 NATIONALTV_LAG3 NATIONALTV_LAG4 NATIONALTV_LAG5
+	digital NATIONALPRINT_LAG1 NATIONALPRINT_LAG3 NATIONALPRINT_LAG4 NATIONALPRINT_LAG5		sponsorship_events Unaided_Awareness_lag1;
+output p = pred_una;
+run;
+/****************************************************************************************************************/
+
+
+
