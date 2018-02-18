@@ -1,0 +1,112 @@
+distinct_store_visit_num	trans_num	item_num	item_distinct_num	item_amt_sum	net_amt_per_trans
+item_per_trans	net_amt_per_item	percent_uniqu_item	
+babyfurnbasic_share	beautyaids_share	consum_elec_share	food_beverage_share	furniture_share	 
+ home_organiz_share	kitch_table_share   mens_apparel_share	 missy_apparel_share	nit_share	optical_share	
+pharmacy_share	toys_share  trimatree_share	  unallocated_share	women_access_share	
+loyalty_member_flag	tenure_months	CUSTOMER_ID	 dm_sends
+/**************************************************************************************/
+libname case6 'C:\Users\yxw166230\MKT6v99\case6'; run;
+/***** output from sas7bdat to Excel  *****/
+ODS HTML FILE='c:\Users\yxw166230\MKT6v99\case6\case6.xls';
+PROC print data=Case6.sko2;
+run;
+/********************** set Logit for each product category **********/
+data case6.case6;
+set case6.sko2;
+logit_babyfurnbasic=0;	
+logit_beautyaids=0;	
+logit_consum_elec =0;
+logit_food_beverage=0;
+logit_furniture=0;
+logit_home_organiz=0;
+logit_kitch_table=0;
+logit_mens_apparel=0;
+logit_missy_apparel=0;
+logit_nit=0;
+logit_optical=0;
+logit_pharmacy=0;
+logit_toys=0;
+logit_trimatree=0; 
+logit_unallocated=0; 
+logit_women_access=0;	
+if babyfurnbasic_share> 0 then logit_babyfurnbasic=1;		
+if beautyaids_share >0 then logit_beautyaids=1;	
+if consum_elec_share > 0 then 	logit_consum_elec =1;
+if food_beverage_share > 0 then logit_food_beverage=1;
+if furniture_share > 0 then logit_furniture=1;	 
+if home_organiz_share> 0 then 	logit_home_organiz=1;
+if kitch_table_share >0 then logit_kitch_table=1;
+if mens_apparel_share> 0 then logit_mens_apparel=1;
+if missy_apparel_share>0 then logit_missy_apparel=1;	
+if nit_share > 0 then logit_nit=1;
+if optical_share > 0 then logit_optical=1;	
+if pharmacy_share > 0 then logit_pharmacy=1;
+if toys_share > 0 then logit_toys=1;
+if  trimatree_share > 0 then logit_trimatree=1; 
+if  unallocated_share>0 then logit_unallocated=1; 	
+if women_access_share > 0 then logit_women_access=1;	
+run;
+/**********************   ********************/
+
+
+/******************************* Mike code***********************************/
+run;
+proc sort data = pma.logit_data_062016; by custid; run;
+proc sort data = pma.logit_demo_062016; by custid; run;
+data logit_merge;
+merge pma.logit_data_062016 pma.logit_demo_062016; 
+by custid; run;
+
+data logit;
+set logit_merge;
+purch = 0;
+if purch_amt > 0 then purch = 1;
+run;
+proc means data = logit; run;
+
+proc logistic descending data = logit;
+model purch = dm em1 em2 hhincome/  
+pprob=  .402 ctable; 
+output out = logit_pred p = phat;
+run;
+
+proc sort data = logit_pred; 
+by phat; run;
+
+proc rank data=logit_pred 
+out=ranks (keep = phat purch) 
+groups = 10 descending ties=low; 
+var phat;
+run;
+
+proc sort data = ranks; 
+by phat; run;
+
+proc means data = ranks noprint;
+by phat; output out = means; run;
+
+data means2;
+set means;
+where _stat_ = 'MEAN';
+run;
+
+/***** market basket ******/
+data products;
+set logit_merge;
+logit_a = 0; logit_b = 0; logit_c = 0; logit_d = 0; logit_e = 0;
+if proda > 0 then logit_a = 1;
+if prodb > 0 then logit_b = 1;
+if prodc > 0 then logit_c = 1;
+if prodd > 0 then logit_d = 1;
+if prode > 0 then logit_e = 1;
+run;
+
+proc means data = products;
+var logit_a logit_b logit_c logit_d logit_e;
+run;
+
+proc logistic descending data = products;
+model logit_b = logit_a logit_c logit_d logit_e hhsize hhincome em1 em2 dm sms; run;
+
+by cust_id; 
+run;
